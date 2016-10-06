@@ -2455,7 +2455,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 		if (isset($this->urls[$link_id])) {
 			$url = $this->urls[$link_id];
 		} else {
-			$url = "doku.php?id=".$link_id
+			$url = "doku.php?id=".$link_id;
 		}
 
 		$url = $this->encodeAttribute($url);
@@ -2576,14 +2576,23 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 			if (isset($this->ref_attr[$link_id]))
 				$result .= $this->ref_attr[$link_id];
 			$result .= $this->empty_element_suffix;
-			$result = $this->hashPart($result);
 		}
 		else {
-			# If there's no such link ID, leave intact:
-			$result = $whole_match;
+			# if there's no such link ID, assume it is an internal image:
+			$url = "lib/exe/fetch.php?media=".$link_id;
+			$url = $this->encodeAttribute($url);
+			$result = "<img src=\"$url\" alt=\"$alt_text\"";
+			$result .= $this->empty_element_suffix;
+			if (!$this->in_anchor) {
+				# make it a link if not already a link
+				$img_elem = $this->hashPart($result);
+				$link_url = "lib/exe/detail.php?media=".$link_id;
+				$link_url = $this->encodeAttribute($link_url);
+				$result = "<a href=\"$link_url\">$img_elem</a>";
+			}
 		}
 
-		return $result;
+		return $this->hashPart($result);
 	}
 	function _doImages_inline_callback($matches) {
 		$whole_match	= $matches[1];
