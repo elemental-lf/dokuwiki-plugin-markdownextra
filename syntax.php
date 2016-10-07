@@ -50,7 +50,7 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
         if ($mode == 'xhtml') {
             list($state,$match) = $data;
             switch ($state) {
-                case DOKU_LEXER_ENTER :      break;    
+                case DOKU_LEXER_ENTER :      break;
                 case DOKU_LEXER_UNMATCHED :
                     $match = $this->_toc($renderer, $match);
                     $renderer->doc .= $match;
@@ -63,7 +63,7 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
             //dbg($data);
             list($state,$match) = $data;
             switch ($state) {
-                case DOKU_LEXER_ENTER :      break;    
+                case DOKU_LEXER_ENTER :      break;
                 case DOKU_LEXER_UNMATCHED :
                     if (!$renderer->meta['title']){
                         $renderer->meta['title'] = $this->_markdown_header($match);
@@ -87,7 +87,7 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
     }
 
     function _markdown_header($text)
-    {   
+    {
         $doc = new DOMDocument('1.0','UTF-8');
         //dbg($doc);
         $meta = '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>';
@@ -98,7 +98,7 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
         }
         return false;
     }
-    
+
     function _internallinks($text)
     {
         $links = array();
@@ -116,7 +116,7 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
         }
         return $links;
     }
-    
+
     function _toc(&$renderer, $text)
     {
         $doc = new DOMDocument('1.0','UTF-8');
@@ -130,11 +130,14 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
                 {
                     #dbg($node);
                     $node->setAttribute('class', 'sectionedit'.$match[1]);
-                    $hid = $renderer->_headerToLink($node->nodeValue,'true');
-                    $node->setAttribute('id',$hid);
+                    $hid = $node->getAttribute('id');
+                    if ($hid=='') {}
+                        $hid = $renderer->_headerToLink($node->nodeValue,'true');
+                        $node->setAttribute('id',$hid);
+                    }
                     $renderer->toc_additem($hid, $node->nodeValue, $match[1]);
                 }
-                
+
             }
         }
         //remove outer tags of content
