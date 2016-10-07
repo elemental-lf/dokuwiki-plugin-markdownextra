@@ -5,3 +5,4 @@
 
 $conf['frontmatter'] = false;
 $conf['markdowneditor'] = 'meltdown';
+$conf['missingReference'] = 'ignore';

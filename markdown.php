@@ -1724,6 +1724,11 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 	# Predefined abbreviations.
 	var $predef_abbr = array();
 
+	# Function to ease the retrieval of user set configuration variables
+	function getConf($setting) {
+		global $conf;
+		return $conf['plugin']['markdownextra'][$setting];
+	}
 
 	### Parser Implementation ###
 
@@ -2454,8 +2459,15 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 
 		if (isset($this->urls[$link_id])) {
 			$url = $this->urls[$link_id];
-		} else {
-			$url = "doku.php?id=".$link_id;
+		}
+		else {
+			switch ($this->getConf('missingReference')) {
+				case 'internal':
+					$url = "doku.php?id=".$link_id;
+					break;
+				default:
+					return $whole_match;
+			}
 		}
 
 		$url = $this->encodeAttribute($url);
@@ -2578,17 +2590,23 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 			$result .= $this->empty_element_suffix;
 		}
 		else {
-			# if there's no such link ID, assume it is an internal image:
-			$url = "lib/exe/fetch.php?media=".$link_id;
-			$url = $this->encodeAttribute($url);
-			$result = "<img src=\"$url\" alt=\"$alt_text\"";
-			$result .= $this->empty_element_suffix;
-			if (!$this->in_anchor) {
-				# make it a link if not already a link
-				$img_elem = $this->hashPart($result);
-				$link_url = "lib/exe/detail.php?media=".$link_id;
-				$link_url = $this->encodeAttribute($link_url);
-				$result = "<a href=\"$link_url\">$img_elem</a>";
+			switch ($this->getConf('missingReference')) {
+				case 'internal':
+					# if there's no such link ID, assume it is an internal image:
+					$url = "lib/exe/fetch.php?media=".$link_id;
+					$url = $this->encodeAttribute($url);
+					$result = "<img src=\"$url\" alt=\"$alt_text\"";
+					$result .= $this->empty_element_suffix;
+					if (!$this->in_anchor) {
+						# make it a link if not already a link
+						$img_elem = $this->hashPart($result);
+						$link_url = "lib/exe/detail.php?media=".$link_id;
+						$link_url = $this->encodeAttribute($link_url);
+						$result = "<a href=\"$link_url\">$img_elem</a>";
+					}
+					break;
+				default:
+					return $whole_match;
 			}
 		}
 
