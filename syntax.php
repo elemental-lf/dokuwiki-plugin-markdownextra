@@ -38,10 +38,73 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
     function handle($match, $state, $pos, Doku_Handler $handler) {
         switch ($state) {
             case DOKU_LEXER_ENTER :      return array($state, '');
-            case DOKU_LEXER_UNMATCHED :  return array($state, Markdown($match));
+            case DOKU_LEXER_UNMATCHED :
+                //todo 增加段落编辑
+                $result = Markdown($match);
+                $result = $this->handleSectionWrapper($result);
+                $result = $this->handleSectionEdit($match,$result);
+                return array($state, $result);
             case DOKU_LEXER_EXIT :       return array($state, '');
         }
         return array($state,'');
+    }
+
+    function handleSectionWrapper($result){
+        $regexp = '/(<\/h[12]>)([\s\S]+?)(?=<h[12]>|\Z)/';
+        $result = preg_replace_callback($regexp,function($matches){
+            return $matches[1]."\n<div class=\"level2\">".$matches[2]."\n</div><!-- SECTION-EDIT -->\n";
+        },$result);
+        return $result;
+    }
+
+    private $matchRanges;
+    function handleSectionEdit($match,$result){
+        $this->matchRanges = $this->getHeaderRange($match);
+        $regexp = '/<!-- SECTION-EDIT -->/';
+        $result = preg_replace_callback($regexp,function ($matches){
+            static $n;
+            $n++;
+            $_g_range=$this->matchRanges;
+            return '<!-- EDIT'.$n.' SECTION "'.$_g_range[$n-1]["title"].'" ['.$_g_range[$n-1]["start"].'-'.$_g_range[$n-1]["end"].'] -->';
+        },$result);
+        return $result;
+    }
+
+    function getHeaderRange($match){
+        $ranges = array();
+        $n = 0;$lastPos = -1;
+        while (is_array($ps=$this->headeripos($match,$lastPos + 1))){
+            $pos = $ps[1];
+            $length = $ps[0];
+            $ranges[$n]["start"]=$pos;
+            $ranges[$n]["title"]=trim(substr($match,$pos+$length,stripos($match,"\n",$pos + $length) - $pos - $length));
+            $n> 0 && $ranges[$n-1]["end"]=$pos-1;
+            $lastPos = $pos;
+            $n++;
+        }
+        $ranges[$n-1]["end"]=strlen($match);
+        return $ranges;
+    }
+
+    function headeripos($match,$offset){
+        $header1 = "\n# ";
+        $header2 = "\n## ";
+        $pos1=stripos($match,$header1,$offset);
+        $pos2=stripos($match,$header2,$offset);
+
+        if($pos2 !== false && $pos1 !== false){
+            if ($pos2 <= $pos1) {
+                return array("0" => 4, $pos2);
+            }else{
+                return array("0" => 3, $pos1);
+            }
+        }elseif($pos2 !== false){
+            return array("0" => 4, $pos2);
+        }elseif($pos1 !== false){
+            return array("0" => 3, $pos1);
+        }else{
+            return false;
+        }
     }
 
     function render($mode, Doku_Renderer $renderer, $data) {
@@ -120,6 +183,7 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
     function _toc(&$renderer, $text)
     {
         $doc = new DOMDocument('1.0','UTF-8');
+        $headerSeq = 1;
         //dbg($doc);
         $meta = '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>';
         $doc->loadHTML($meta.$text);
@@ -129,7 +193,9 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
                 if (preg_match('/h([1-7])/',$node->tagName,$match))
                 {
                     #dbg($node);
-                    $node->setAttribute('class', 'sectionedit'.$match[1]);
+                    if (in_array($match[1],["1","2"])) {
+                        $node->setAttribute('class', 'sectionedit' . ($headerSeq++));
+                    }
                     $hid = $renderer->_headerToLink($node->nodeValue,'true');
                     $node->setAttribute('id',$hid);
                     $renderer->toc_additem($hid, $node->nodeValue, $match[1]);
