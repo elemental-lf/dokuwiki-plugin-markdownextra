@@ -39,14 +39,36 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
         switch ($state) {
             case DOKU_LEXER_ENTER :      return array($state, '');
             case DOKU_LEXER_UNMATCHED :
-                //todo 增加段落编辑
-                $result = Markdown($match);
+                $result = $this->DokuLink2MarkDown($match);
+                $result = Markdown($result);
                 $result = $this->handleSectionWrapper($result);
                 $result = $this->handleSectionEdit($match,$result);
                 return array($state, $result);
             case DOKU_LEXER_EXIT :       return array($state, '');
         }
         return array($state,'');
+    }
+
+    function DokuLink2MarkDown($match){
+        $pattern = '/\[\[(.*?)\|(.*?)\]\]/';
+        $match = preg_replace_callback($pattern,function($matches){
+            $matches[1] = str_replace(" ","_",$matches[1]);
+            if(substr($matches[1],0,4)=="http"){
+                //External
+                return "[{$matches[2]}]({$matches[1]})";
+            }else{
+                //Internal
+                return "[{$matches[2]}](?id={$matches[1]})";
+            }
+        },$match);
+
+        $pattern = '/\[\[(.*?)\]\]/';
+        $match = preg_replace_callback($pattern,function($matches){
+            $link = str_replace(" ","_",$matches[1]);
+            return "[{$matches[1]}](?id={$link})";
+        },$match);
+
+        return $match;
     }
 
     function handleSectionWrapper($result){
