@@ -135,7 +135,7 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
                     #dbg($node);
                     $node->setAttribute('class', 'sectionedit'.$match[1]);
                     $hid = $node->getAttribute('id');
-                    if ($hid=='') {}
+                    if ($hid=='') {
                         $hid = $renderer->_headerToLink($node->nodeValue,'true');
                         $node->setAttribute('id',$hid);
                     }
