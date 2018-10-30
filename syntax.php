@@ -134,11 +134,14 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
                 {
                     #dbg($node);
                     $node->setAttribute('class', 'sectionedit'.$match[1]);
-                    $hid = $renderer->_headerToLink($node->nodeValue,'true');
-                    $node->setAttribute('id',$hid);
+                    $hid = $node->getAttribute('id');
+                    if ($hid=='') {}
+                        $hid = $renderer->_headerToLink($node->nodeValue,'true');
+                        $node->setAttribute('id',$hid);
+                    }
                     $renderer->toc_additem($hid, $node->nodeValue, $match[1]);
                 }
-                
+
             }
         }
         //remove outer tags of content
