@@ -1,3 +1,25 @@
+# About this fork
+
+This fork integrates some commits from all the other forks for use in my
+personal DokuWiki installation.  Mainly it replaces Markdown Classic with
+Markdown Lib and also updates it to the latest version. It also updates
+the Meltdown editor.
+
+Notable missing features:
+
+* No shortcut syntax for internal links
+* No GeSHi syntax highlighting
+
+Regarding the syntax highlighting I think this could be implemented cleanly
+by using the `code_block_content_func` callback.  The same goes for
+interal links by using `url_filter_func`.  But I'm currently using the
+CodeMirror plugin for syntax highlighting which does the highlighting in the
+browser via JavaScript.  I've a [fork of the CodeMirror plugin](https://github.com/elemental-lf/dokuwiki-plugin-codemirror) 
+which apart from a CodeMirror update contains a small jQuery tweak so that it
+works with this plugin.  The Meltdown editor setup and the CodeMirror editor
+currently don't play well with each other.  I've disabled the Meltdown
+editor in my setup.
+
 # PHP Markdown Extra plugin for DokuWiki
     ---- plugin ----
     description: Parses PHP Markdown Extra blocks.
