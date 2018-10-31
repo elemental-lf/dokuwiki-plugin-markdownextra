@@ -54,8 +54,6 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
                 case DOKU_LEXER_ENTER :      break;    
                 case DOKU_LEXER_UNMATCHED :
                     $match = $this->_toc($renderer, $match);
-                    //dbg($match);
-                    $match = $this->_formatWikiLink($match); //TODO maybe custom
                     $renderer->doc .= $match;
                     break;
                 case DOKU_LEXER_EXIT :       break;
@@ -149,42 +147,5 @@ class syntax_plugin_markdownextra extends DokuWiki_Syntax_Plugin {
         $html = preg_replace('/.+<body>/', '', $html);
         $html = preg_replace('@</body>.*</html>@','', $html);
         return $html;
-    }
-
-    /**
-     * format wiki self link
-     * such as [anchor](wiki:welcome)   => <a href="{OKUWIKI_URL}wiki:welcome" >anchor</a>
-     * 
-     */
-    function _formatWikiLink($text){
-        $callback = function( $matches ) { 
-            return $this->_doReplaceWikiHref_callback($matches); 
-        }; 
-        $t = preg_replace_callback('{<a\s
-                        [^>]*                               #attribute
-                        href="([^\" >]*?)"                  #href
-                        [^>]*                               #other attribute
-                        >(.*?)</a>                          #anchor
-                }xs',
-                $callback ,$text);
-
-        //dbg($t);
-        return $t;
-    }
-
-    /**
-     * replace wiki href
-     */
-    function _doReplaceWikiHref_callback($match){
-        $href= $match[1];
-        
-        if($href == "" or preg_match('/^(?:https?|ftps?|mailto|\/|\?)/',$href)){
-            return $match[0];
-        }
-        $innerUrl = wl($match[1]);
-        dbg($innerUrl);
-        $retUrl = preg_replace("/href=\"{$href}\"/","href=\"{$innerUrl}\"",$match[0]);
-        //dbg($retUrl);
-        return $retUrl;
     }
 }
